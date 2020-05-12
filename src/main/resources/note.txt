@@ -1,0 +1,26 @@
+1.Servlet3.0以后，web容器在启动的时候会扫描每个Jar包下的META-INF/services/javax.servlet.ServletContainerInitializer
+2.加载这个文件指定的类 SpringServletContainerInitializer
+3.spring的应用一启动会加载感兴趣的 WebApplicationInitializer 接口下的所有组件
+4.并且为 WebApplicationInitializer 组件创建对象（组件不是接口，不是抽象类）
+    1.AbstractContextLoaderInitializer：创建根容器 registerContextLoaderListener(servletContext); -> WebApplicationContext rootAppContext = createRootApplicationContext();
+    2.AbstractDispatcherServletInitializer:
+        1.创建web的IoC容器：registerDispatcherServlet(servletContext); -> WebApplicationContext servletAppContext = createServletApplicationContext();
+        2.创建一个dispatcherServlet： FrameworkServlet dispatcherServlet = createDispatcherServlet(servletAppContext);
+            将创建的 dispatcherServlet 添加到 servletContext 中
+            ServletRegistration.Dynamic registration = servletContext.addServlet(servletName, dispatcherServlet);
+            registration.setLoadOnStartup(1);
+            registration.addMapping(getServletMappings());
+            registration.setAsyncSupported(isAsyncSupported());
+    3.AbstractAnnotationConfigDispatcherServletInitializer 注解方式配置的 DispatcherServlet 初始化器
+        1.创建根容器 createRootApplicationContext() -> Class<?>[] configClasses = getRootConfigClasses(); 相当于重写父类创建根容器的方法，利用这个方法传入配置类
+        2.创建web的IoC容器：createServletApplicationContext() -> Class<?>[] configClasses = getServletConfigClasses();相当于重写父类的创建IoC容器的方法，利用这个方法注册Servlet
+
+
+总结：以注解方式启动SpringMVC，继承 AbstractAnnotationConfigDispatcherServletInitializer
+     实现它里边抽象方法指定的 DispatcherServlet 的配置信息
+===================================================================================================================================
+===================================================================================================================================
+===================================================================================================================================
+定制 SpringMVC：
+1.@EnableWebMvc : 开启SpringMVC定制配置功能
+2.配置组件（视图解析器、视图映射、静态资源映射、拦截器）, extends WebMvcConfigurerAdapter
